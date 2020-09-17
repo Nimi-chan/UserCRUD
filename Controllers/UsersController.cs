@@ -8,6 +8,7 @@ using UserCRUD.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace UserCRUD.Controllers
 {
@@ -21,8 +22,8 @@ namespace UserCRUD.Controllers
             db = context;
             if (!db.Users.Any())
             {
-                db.Users.Add(new User { Name = "Tom", Age = 26 });
-                db.Users.Add(new User { Name = "Alice", Age = 31 });
+                db.Users.Add(new User { Email = "tom26@gmail.com", Name = "Tom", Age = 26 });
+                db.Users.Add(new User { Email = "alice31@gmail.com", Name = "Alice", Age = 31 });
                 db.SaveChanges();
             }
         }
@@ -33,11 +34,21 @@ namespace UserCRUD.Controllers
             return await db.Users.ToListAsync();
         }
 
-        // GET api/users/5
+        // GET api/users/[id]
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> Get(int id)
         {
             User user = await db.Users.FirstOrDefaultAsync(x => x.Id == id);
+            if (user == null)
+                return NotFound();
+            return new ObjectResult(user);
+        }
+
+        // GET api/users/by_email/[email]
+        [HttpGet("by_email/{email}")]
+        public async Task<ActionResult<User>> Get(string email)
+        {
+            User user = await db.Users.FirstOrDefaultAsync(x => x.Email == email);
             if (user == null)
                 return NotFound();
             return new ObjectResult(user);
@@ -57,6 +68,7 @@ namespace UserCRUD.Controllers
             return Ok(user);
         }
 
+
         // PUT api/users/
         [HttpPut]
         public async Task<ActionResult<User>> Put(User user)
@@ -75,11 +87,25 @@ namespace UserCRUD.Controllers
             return Ok(user);
         }
 
-        // DELETE api/users/5
+        // DELETE api/users/[id]
         [HttpDelete("{id}")]
         public async Task<ActionResult<User>> Delete(int id)
         {
             User user = db.Users.FirstOrDefault(x => x.Id == id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            db.Users.Remove(user);
+            await db.SaveChangesAsync();
+            return Ok(user);
+        }
+
+        //DELETE api/users/by_email/[email]
+        [HttpDelete("by_email/{email}")]
+        public async Task<ActionResult<User>> Delete(string email)
+        {
+            User user = db.Users.FirstOrDefault(x => x.Email == email);
             if (user == null)
             {
                 return NotFound();
